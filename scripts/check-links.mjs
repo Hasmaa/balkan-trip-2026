@@ -1,0 +1,6 @@
+import { readFile } from 'node:fs/promises';
+const catalogue=await readFile(new URL('../src/data/resources.ts',import.meta.url),'utf8');
+const urls=[...new Set([...catalogue.matchAll(/https?:\/\/[^'`\s)]+/g)].map(m=>m[0]).filter(url=>!url.includes('${')))];
+const ignored=/facebook\.com|instagram\.com|google\.com\/maps/;
+const check=async url=>{if(ignored.test(url))return 'skipped (site blocks automation)';const ctl=new AbortController();const timer=setTimeout(()=>ctl.abort(),9000);try{let res=await fetch(url,{method:'HEAD',redirect:'follow',signal:ctl.signal,headers:{'user-agent':'BalkanTripLinkCheck/1.0'}});if([405,403,501].includes(res.status))res=await fetch(url,{method:'GET',redirect:'follow',signal:ctl.signal,headers:{'user-agent':'BalkanTripLinkCheck/1.0'}});return res.ok?`${res.redirected?'redirect → ':''}${res.status}`:`failure ${res.status}`}catch(e){return e.name==='AbortError'?'timeout':'blocked / network failure'}finally{clearTimeout(timer)}};
+console.log(`Checking ${urls.length} resource links…`);const results=await Promise.all(urls.map(async url=>[url,await check(url)]));for(const [url,status] of results)console.log(`${status.padEnd(27)} ${url}`);console.log('\nHTTP success does not guarantee current opening hours, availability, or road access.');

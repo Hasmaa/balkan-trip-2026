@@ -1,0 +1,1 @@
+const metrics=[['10','days'],['≈ 2,500–2,700','km incl. local driving'],['7','countries'],['2','two-night bases'],['7–8 h','longest scenic day'],['Bucharest → Ioannina','start → finish']];export function TripMetrics(){return <section className="metrics" aria-label="Trip metrics">{metrics.map(([n,l])=><div key={l}><strong>{n}</strong><span>{l}</span></div>)}</section>}

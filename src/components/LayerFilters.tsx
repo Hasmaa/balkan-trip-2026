@@ -1,0 +1,1 @@
+const layers=['Camps','Hotel backups','Hikes','Swimming','Viewpoints','Food','Fuel & groceries','Borders']; export function LayerFilters(){return <fieldset className="filters"><legend>Map filters</legend>{layers.map((x,i)=><label key={x}><input type="checkbox" defaultChecked={i<4}/>{x}</label>)}</fieldset>}

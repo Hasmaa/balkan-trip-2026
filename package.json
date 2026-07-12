@@ -1,0 +1,9 @@
+{
+  "name": "balkan-nature-road-trip",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": { "dev": "vite", "build": "tsc -b && vite build", "test": "vitest run", "check:links": "node scripts/check-links.mjs" },
+  "dependencies": { "@vitejs/plugin-react": "latest", "lucide-react": "latest", "maplibre-gl": "latest", "react": "latest", "react-dom": "latest", "vite": "latest" },
+  "devDependencies": { "@types/react": "latest", "@types/react-dom": "latest", "typescript": "latest", "vitest": "latest" }
+}

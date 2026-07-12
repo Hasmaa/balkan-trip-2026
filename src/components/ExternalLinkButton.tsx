@@ -1,0 +1,2 @@
+import { ExternalLink } from 'lucide-react'; import type { ResourceLink } from '../types/trip';
+export function ExternalLinkButton({link}:{link:ResourceLink}) { return <a className={`quick-link ${link.kind}`} href={link.url} target="_blank" rel="noopener noreferrer" aria-label={`${link.label} (opens in a new tab)`}><span className="link-kind">{link.kind}</span>{link.label}<ExternalLink size={14}/></a>; }

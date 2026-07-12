@@ -1,0 +1,7 @@
+export type VerificationStatus = 'official' | 'secondary' | 'unverified';
+export type ResourceType = 'campground' | 'hotel' | 'attraction' | 'hike' | 'swimming' | 'sunset' | 'restaurant' | 'fuel' | 'grocery' | 'border' | 'national-park' | 'scenic';
+export type AmenityValue = 'yes' | 'no' | 'reported' | 'unknown';
+export type LinkKind = 'official' | 'booking' | 'directory' | 'social' | 'maps' | 'directions';
+export interface ResourceLink { label: string; url: string; kind: LinkKind; }
+export interface Resource { id: string; name: string; type: ResourceType; country: string; dayIds: number[]; coordinates: [number, number]; shortDescription: string; whyItMatters: string; practicalNotes: string[]; amenities?: Record<string, AmenityValue>; links: ResourceLink[]; officialUrl?: string; bookingUrl?: string; directoryUrl?: string; socialUrl?: string; mapsQuery: string; phone?: string; email?: string; verificationStatus: VerificationStatus; verifiedAt?: string; needsVerification: string[]; linkLabels?: Record<string, string>; address?: string; }
+export interface TripDay { day: number; title: string; origin: string; destination: string; routeCoordinates: [number, number][]; approximateDriveMinutes: number; suggestedDeparture: string; arrivalWindow: string; difficulty: 'relaxed' | 'moderate' | 'long'; overnightResourceId: string; hotelBackupResourceId?: string; resourceIds: string[]; waypointNames: string[]; summary: string; warnings: string[]; }

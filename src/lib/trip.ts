@@ -1,0 +1,10 @@
+import type { Resource, TripDay } from '../types/trip';
+export const mapsSearchUrl=(query:string)=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+export const directionsUrl=(origin:string,destination:string,waypoints:string[]=[])=>(`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}${waypoints.length?`&waypoints=${encodeURIComponent(waypoints.join('|'))}`:''}&travelmode=driving`);
+export const weatherUrl=(place:string)=>`https://www.google.com/search?q=${encodeURIComponent(`weather ${place}`)}`;
+export const parseTripQuery=(search:string)=>{const q=new URLSearchParams(search);const day=Number(q.get('day'));return {day:day>=1&&day<=11?day:undefined,resource:q.get('resource')||undefined};};
+export const isStale=(verifiedAt:string|undefined,days=90,now=new Date())=>!verifiedAt||((now.getTime()-new Date(verifiedAt).getTime())/86400000)>days;
+export const filteredResources=(resources:Resource[],day:number)=>resources.filter(r=>r.dayIds.includes(day));
+export const navigateDay=(days:TripDay[],current:number,delta:number)=>days.find(d=>d.day===Math.min(days.length,Math.max(1,current+delta)))?.day ?? current;
+export const amenityLabel=(value: string)=> value === 'reported' ? 'Reported — recheck' : value === 'unknown' ? 'Unknown' : value === 'yes' ? 'Yes' : 'No';
+export type BudgetRange={min:number;max:number}; export const budgetTotal=(rows:BudgetRange[])=>rows.reduce((a,r)=>({min:a.min+r.min,max:a.max+r.max}),{min:0,max:0});
