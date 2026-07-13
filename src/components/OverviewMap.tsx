@@ -3,10 +3,13 @@ import maplibregl, { type Map } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Resource, TripDay } from '../types/trip';
 import { simulationMoments } from '../data/simulation';
+import { routeGeometry } from '../data/routeGeometry';
 import { zoomForMoment, dateForDay, formatTripDate } from '../lib/trip';
 
 const style = import.meta.env.VITE_MAP_STYLE_URL || 'https://tiles.openfreemap.org/styles/liberty';
 type Focus = { coordinates: [number, number]; kind: string; seq: number };
+// Real baked driving polyline for a day, or the straight origin→destination line if a day's route wasn't baked.
+const lineFor = (d: TripDay): [number, number][] => routeGeometry[d.day] ?? d.routeCoordinates;
 
 export function OverviewMap({ days, resources, selected, focus, start, onSelectDay, onOpen }: { days: TripDay[]; resources: Resource[]; selected: number; focus?: Focus; start: string; onSelectDay: (n: number) => void; onOpen: (r: Resource) => void }) {
   const el = useRef<HTMLDivElement>(null);
@@ -22,7 +25,7 @@ export function OverviewMap({ days, resources, selected, focus, start, onSelectD
       map.current = instance;
       instance.on('load', () => {
         days.forEach(d => {
-          instance.addSource(`route-${d.day}`, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: d.routeCoordinates } } });
+          instance.addSource(`route-${d.day}`, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: lineFor(d) } } });
           instance.addLayer({ id: `route-${d.day}`, type: 'line', source: `route-${d.day}`, paint: { 'line-color': d.day === selected ? '#e0ad56' : '#5c8f83', 'line-width': d.day === selected ? 5 : 2.5, 'line-opacity': d.day === selected ? 1 : .48 } });
         });
         resources.filter(r => r.type === 'campground').forEach(r => {
@@ -34,7 +37,7 @@ export function OverviewMap({ days, resources, selected, focus, start, onSelectD
           new maplibregl.Marker({ element: marker }).setLngLat(r.coordinates).addTo(instance);
         });
         const bounds = new maplibregl.LngLatBounds();
-        days.flatMap(d => d.routeCoordinates).forEach(p => bounds.extend(p));
+        days.flatMap(lineFor).forEach(p => bounds.extend(p));
         instance.fitBounds(bounds, { padding: 48, maxZoom: 7 });
       });
       instance.on('error', () => setFailed(true));
@@ -68,7 +71,7 @@ export function OverviewMap({ days, resources, selected, focus, start, onSelectD
     const day = days.find(d => d.day === selected);
     if (!day) return;
     const b = new maplibregl.LngLatBounds();
-    day.routeCoordinates.forEach(p => b.extend(p));
+    lineFor(day).forEach(p => b.extend(p));
     instance.fitBounds(b, { padding: 72, maxZoom: 8, duration: 700 });
   }, [selected, focus, days]);
 
