@@ -1,0 +1,15 @@
+# Render Blueprint — free static hosting for the Vite build.
+# Deploy: Render dashboard → New → Blueprint → pick this repo → Apply.
+services:
+  - type: web
+    name: balkan-waterline
+    runtime: static
+    buildCommand: npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: NODE_VERSION
+        value: "20.19.0"
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

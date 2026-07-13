@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "engines": { "node": ">=20.19" },
+  "packageManager": "pnpm@9.15.9",
   "scripts": { "dev": "vite", "build": "tsc -b && vite build", "test": "vitest run", "check:links": "node scripts/check-links.mjs", "build:routes": "node scripts/build-routes.mjs" },
   "dependencies": { "@vitejs/plugin-react": "latest", "lucide-react": "latest", "maplibre-gl": "latest", "react": "latest", "react-dom": "latest", "vite": "latest" },
   "devDependencies": { "@types/react": "latest", "@types/react-dom": "latest", "typescript": "latest", "vitest": "latest" }
