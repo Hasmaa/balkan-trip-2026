@@ -2,6 +2,16 @@ import type { Resource, TripDay } from '../types/trip';
 export const mapsSearchUrl=(query:string)=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 export const directionsUrl=(origin:string,destination:string,waypoints:string[]=[])=>(`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}${waypoints.length?`&waypoints=${encodeURIComponent(waypoints.join('|'))}`:''}&travelmode=driving`);
 export const weatherUrl=(place:string)=>`https://www.google.com/search?q=${encodeURIComponent(`weather ${place}`)}`;
+// [longitude, latitude] -> Google Maps' "lat,lng" order. Coordinates keep the link on the exact planned sites
+// instead of geocoding ambiguous place names.
+export const latLng=(c:[number,number])=>`${c[1]},${c[0]}`;
+export const tripDirectionsUrl=(days:TripDay[])=>{
+  const origin=latLng(days[0].routeCoordinates[0]);
+  const destination=latLng(days[days.length-1].routeCoordinates[1]);
+  const seen=new Set<string>();const waypoints:string[]=[];
+  for(const d of days.slice(0,-1)){const wp=latLng(d.routeCoordinates[1]);if(!seen.has(wp)){seen.add(wp);waypoints.push(wp);}}
+  return directionsUrl(origin,destination,waypoints);
+};
 const isoDate=/^\d{4}-\d{2}-\d{2}$/;
 export const parseTripQuery=(search:string)=>{const q=new URLSearchParams(search);const day=Number(q.get('day'));const start=q.get('start');return {day:day>=1&&day<=11?day:undefined,resource:q.get('resource')||undefined,start:start&&isoDate.test(start)?start:undefined};};
 export const isStale=(verifiedAt:string|undefined,days=90,now=new Date())=>!verifiedAt||((now.getTime()-new Date(verifiedAt).getTime())/86400000)>days;

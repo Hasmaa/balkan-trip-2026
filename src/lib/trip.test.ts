@@ -1,4 +1,4 @@
-import { describe,expect,it } from 'vitest'; import { amenityLabel,budgetTotal,directionsUrl,filteredResources,isStale,navigateDay,parseTripQuery,firstMomentIndexOfDay,stepMoment,advanceMoment,shouldSyncFromDay,zoomForMoment,dateForDay,formatTripDate,normalizeStartDate,DEFAULT_START } from './trip'; import { itinerary } from '../data/itinerary'; import { resources } from '../data/resources'; import { simulationMoments } from '../data/simulation'; import { routeGeometry } from '../data/routeGeometry';
+import { describe,expect,it } from 'vitest'; import { amenityLabel,budgetTotal,directionsUrl,filteredResources,isStale,navigateDay,parseTripQuery,firstMomentIndexOfDay,stepMoment,advanceMoment,shouldSyncFromDay,zoomForMoment,dateForDay,formatTripDate,normalizeStartDate,DEFAULT_START,latLng,tripDirectionsUrl } from './trip'; import { itinerary } from '../data/itinerary'; import { resources } from '../data/resources'; import { simulationMoments } from '../data/simulation'; import { routeGeometry } from '../data/routeGeometry';
 describe('trip helpers',()=>{it('adds budget ranges',()=>expect(budgetTotal([{min:2,max:3},{min:5,max:9}])).toEqual({min:7,max:12}));it('creates a driving link',()=>expect(directionsUrl('A','B',['C'])).toContain('travelmode=driving'));it('parses safe share parameters',()=>expect(parseTripQuery('?day=4&resource=green-bear')).toEqual({day:4,resource:'green-bear'}));it('filters day resources',()=>expect(filteredResources(resources,4).some(r=>r.id==='green-bear')).toBe(true));it('marks dated records stale',()=>expect(isStale('2025-01-01',90,new Date('2026-01-01'))).toBe(true));it('navigates within day bounds',()=>expect(navigateDay(itinerary,1,-1)).toBe(1));it('has no fake links for a missing source',()=>expect(resources.find(r=>r.id==='naluka')?.links.some(l=>l.kind==='official')).toBe(false));it('labels uncertainty honestly',()=>expect(amenityLabel('unknown')).toBe('Unknown'))});
 describe('trip simulation player',()=>{
   const days=[1,1,1,2,2,3];
@@ -20,4 +20,17 @@ describe('baked route geometry',()=>{
   const near=(a:[number,number],b:[number,number])=>Math.hypot(a[0]-b[0],a[1]-b[1])<0.15;
   it('has a road polyline of finite points for every day',()=>{for(let d=1;d<=10;d++){const line=routeGeometry[d];expect(Array.isArray(line)).toBe(true);expect(line.length).toBeGreaterThanOrEqual(2);expect(line.every(p=>p.length===2&&p.every(Number.isFinite))).toBe(true)}});
   it('connects each driving day from its origin checkpoint to its destination',()=>{for(let d=1;d<=10;d++){if(d===4)continue;const line=routeGeometry[d],day=itinerary[d-1];expect(near(line[0],day.routeCoordinates[0])).toBe(true);expect(near(line[line.length-1],day.routeCoordinates[1])).toBe(true)}});
+});
+describe('full route link',()=>{
+  it('orders [lng,lat] as Google\'s "lat,lng"',()=>expect(latLng([26.10,44.43])).toBe('44.43,26.1'));
+  it('routes through the real overnight coordinates, deduped, not the internal keys',()=>{
+    const url=tripDirectionsUrl(itinerary);
+    expect(url).toContain('origin=44.43%2C26.1');        // Bucharest
+    expect(url).toContain('destination=39.67%2C20.85');  // Ioannina
+    expect(url).not.toMatch(/tara|golubac|blagaj|lukove/i); // no ambiguous name keys
+    const wp=decodeURIComponent(url.split('waypoints=')[1].split('&')[0]).split('|');
+    expect(wp).toContain('44.68,22.32');                 // Clisura (Day 1 overnight) is included
+    expect(wp.filter(p=>p==='43.93,19.56').length).toBe(1); // the two Tara nights collapse to one
+    expect(wp.length).toBe(8);
+  });
 });
