@@ -5,13 +5,16 @@ export const weatherUrl=(place:string)=>`https://www.google.com/search?q=${encod
 // [longitude, latitude] -> Google Maps' "lat,lng" order. Coordinates keep the link on the exact planned sites
 // instead of geocoding ambiguous place names.
 export const latLng=(c:[number,number])=>`${c[1]},${c[0]}`;
-export const tripDirectionsUrl=(days:TripDay[])=>{
-  const origin=latLng(days[0].routeCoordinates[0]);
-  const destination=latLng(days[days.length-1].routeCoordinates[1]);
+// A Google Maps driving link through an ordered list of [lng,lat] points: first is origin, last is destination,
+// the rest are waypoints (deduped, capped at Maps' 9-waypoint limit). One point just opens that location.
+export const directionsThrough=(points:[number,number][])=>{
+  if(points.length<2)return points[0]?mapsSearchUrl(latLng(points[0])):directionsUrl('','');
   const seen=new Set<string>();const waypoints:string[]=[];
-  for(const d of days.slice(0,-1)){const wp=latLng(d.routeCoordinates[1]);if(!seen.has(wp)){seen.add(wp);waypoints.push(wp);}}
-  return directionsUrl(origin,destination,waypoints);
+  for(const p of points.slice(1,-1)){const s=latLng(p);if(!seen.has(s)){seen.add(s);waypoints.push(s);}}
+  return directionsUrl(latLng(points[0]),latLng(points[points.length-1]),waypoints.slice(0,9));
 };
+// Full trip: every day's origin+destination checkpoint, in order. directionsThrough dedups the shared nodes.
+export const tripDirectionsUrl=(days:TripDay[])=>directionsThrough(days.flatMap(d=>d.routeCoordinates));
 const isoDate=/^\d{4}-\d{2}-\d{2}$/;
 export const parseTripQuery=(search:string)=>{const q=new URLSearchParams(search);const day=Number(q.get('day'));const start=q.get('start');return {day:day>=1&&day<=11?day:undefined,resource:q.get('resource')||undefined,start:start&&isoDate.test(start)?start:undefined};};
 export const isStale=(verifiedAt:string|undefined,days=90,now=new Date())=>!verifiedAt||((now.getTime()-new Date(verifiedAt).getTime())/86400000)>days;

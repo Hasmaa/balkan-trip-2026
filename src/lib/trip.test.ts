@@ -1,4 +1,4 @@
-import { describe,expect,it } from 'vitest'; import { amenityLabel,budgetTotal,directionsUrl,filteredResources,isStale,navigateDay,parseTripQuery,firstMomentIndexOfDay,stepMoment,advanceMoment,shouldSyncFromDay,zoomForMoment,dateForDay,formatTripDate,normalizeStartDate,DEFAULT_START,latLng,tripDirectionsUrl } from './trip'; import { itinerary } from '../data/itinerary'; import { resources } from '../data/resources'; import { simulationMoments } from '../data/simulation'; import { routeGeometry } from '../data/routeGeometry';
+import { describe,expect,it } from 'vitest'; import { amenityLabel,budgetTotal,directionsUrl,filteredResources,isStale,navigateDay,parseTripQuery,firstMomentIndexOfDay,stepMoment,advanceMoment,shouldSyncFromDay,zoomForMoment,dateForDay,formatTripDate,normalizeStartDate,DEFAULT_START,latLng,tripDirectionsUrl,directionsThrough } from './trip'; import { itinerary } from '../data/itinerary'; import { resources } from '../data/resources'; import { simulationMoments } from '../data/simulation'; import { routeGeometry } from '../data/routeGeometry';
 describe('trip helpers',()=>{it('adds budget ranges',()=>expect(budgetTotal([{min:2,max:3},{min:5,max:9}])).toEqual({min:7,max:12}));it('creates a driving link',()=>expect(directionsUrl('A','B',['C'])).toContain('travelmode=driving'));it('parses safe share parameters',()=>expect(parseTripQuery('?day=4&resource=green-bear')).toEqual({day:4,resource:'green-bear'}));it('filters day resources',()=>expect(filteredResources(resources,4).some(r=>r.id==='green-bear')).toBe(true));it('marks dated records stale',()=>expect(isStale('2025-01-01',90,new Date('2026-01-01'))).toBe(true));it('navigates within day bounds',()=>expect(navigateDay(itinerary,1,-1)).toBe(1));it('has no fake links for a missing source',()=>expect(resources.find(r=>r.id==='naluka')?.links.some(l=>l.kind==='official')).toBe(false));it('labels uncertainty honestly',()=>expect(amenityLabel('unknown')).toBe('Unknown'))});
 describe('trip simulation player',()=>{
   const days=[1,1,1,2,2,3];
@@ -33,4 +33,12 @@ describe('full route link',()=>{
     expect(wp.filter(p=>p==='43.93,19.56').length).toBe(1); // the two Tara nights collapse to one
     expect(wp.length).toBe(8);
   });
+  it('builds directions through an ordered list of points, deduping the middle',()=>{
+    const url=directionsThrough([[1,2],[3,4],[3,4],[5,6],[7,8]]);
+    expect(url).toContain('origin=2%2C1');
+    expect(url).toContain('destination=8%2C7');
+    const wp=decodeURIComponent(url.split('waypoints=')[1].split('&')[0]).split('|');
+    expect(wp).toEqual(['4,3','6,5']); // duplicate middle point collapsed, endpoints excluded
+  });
+  it('links a single point straight to its map location',()=>expect(directionsThrough([[22.42,44.71]])).toContain('maps/search'));
 });
